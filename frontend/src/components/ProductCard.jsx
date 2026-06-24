@@ -9,8 +9,7 @@ export default function ProductCard({ product, setSelectedProduct }) {
   const inStock = (product.stock ?? 0) > 0;
 
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative flex flex-col">
-
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative flex flex-col h-full">
       {/* Category Badge */}
       {product.category && (
         <span className="absolute top-2 left-2 bg-black/80 text-yellow-400 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full z-10">
@@ -30,14 +29,15 @@ export default function ProductCard({ product, setSelectedProduct }) {
         onClick={() => setSelectedProduct(product)}
         src={product.image}
         alt={product.name}
-        className={`h-36 sm:h-48 md:h-56 w-full object-cover cursor-pointer ${!inStock ? "opacity-50" : ""}`}
+        className={`h-32 sm:h-44 md:h-52 lg:h-56 w-full object-cover cursor-pointer ${
+          !inStock ? "opacity-50" : ""
+        }`}
       />
 
       {/* Content */}
       <div className="p-3 sm:p-4 flex flex-col flex-1">
-
         {/* Name */}
-        <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 line-clamp-2 leading-tight">
+        <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 line-clamp-2 leading-tight min-h-[40px] sm:min-h-[48px]">
           {product.name}
         </h2>
 
@@ -53,19 +53,21 @@ export default function ProductCard({ product, setSelectedProduct }) {
               {"★".repeat(Math.round(product.rating))}
               {"☆".repeat(5 - Math.round(product.rating))}
             </span>
-            <span className="text-gray-400 text-xs">({product.numReviews})</span>
+            <span className="text-gray-400 text-xs">
+              ({product.numReviews})
+            </span>
           </div>
         ) : (
           <p className="text-gray-300 text-xs mt-1">No reviews yet</p>
         )}
 
-        {/* Description - hidden on mobile to save space */}
+        {/* Description */}
         <p className="hidden sm:block text-gray-500 text-xs mt-2 line-clamp-2">
           {product.description}
         </p>
 
         {/* Price */}
-        <p className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-500 mt-2">
+        <p className="text-base sm:text-xl md:text-2xl font-bold text-yellow-500 mt-2">
           ₹{product.price.toLocaleString()}
         </p>
 
@@ -76,7 +78,7 @@ export default function ProductCard({ product, setSelectedProduct }) {
               addToWishlist(product);
               toast.success("Added to Wishlist");
             }}
-            className="bg-red-500 text-white w-full py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-red-600 transition"
+            className="bg-red-500 text-white w-full py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-sm font-semibold hover:bg-red-600 transition"
           >
             ♡ Wishlist
           </button>
@@ -87,7 +89,7 @@ export default function ProductCard({ product, setSelectedProduct }) {
               addToCart(product);
               toast.success("Added to Cart");
             }}
-            className={`w-full py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition ${
+            className={`w-full py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-sm font-semibold transition ${
               inStock
                 ? "bg-black text-white hover:bg-yellow-400 hover:text-black"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"

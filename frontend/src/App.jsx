@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Navbar from "./components/Navbar"; // ✅ import Navbar here
+import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
@@ -22,16 +22,73 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
 
+  // ✅ Go back to Home without reloading page
+  const goHome = () => {
+    setShowCart(false);
+    setShowLogin(false);
+    setShowProfile(false);
+    setShowWishlist(false);
+    setShowSignup(false);
+    setSelectedProduct(null);
+    setShowCheckout(false);
+    setShowAdmin(false);
+    setShowOrders(false);
+  };
+
   const renderPage = () => {
     if (showAdmin) return <Admin setShowAdmin={setShowAdmin} />;
-    if (showSignup) return <Signup setShowSignup={setShowSignup} setShowLogin={setShowLogin} />;
-    if (showLogin) return <Login setShowLogin={setShowLogin} setShowSignup={setShowSignup} />;
-    if (showWishlist) return <Wishlist setShowCart={setShowCart} setShowWishlist={setShowWishlist} />;
-    if (showCheckout) return <Checkout setShowCheckout={setShowCheckout} setShowOrders={setShowOrders} />;
-    if (showProfile) return <Profile setShowProfile={setShowProfile} setShowOrders={setShowOrders} setShowAdmin={setShowAdmin} />;
+    if (showSignup)
+      return (
+        <Signup
+          setShowSignup={setShowSignup}
+          setShowLogin={setShowLogin}
+        />
+      );
+    if (showLogin)
+      return (
+        <Login
+          setShowLogin={setShowLogin}
+          setShowSignup={setShowSignup}
+        />
+      );
+    if (showWishlist)
+      return (
+        <Wishlist
+          setShowCart={setShowCart}
+          setShowWishlist={setShowWishlist}
+        />
+      );
+    if (showCheckout)
+      return (
+        <Checkout
+          setShowCheckout={setShowCheckout}
+          setShowOrders={setShowOrders}
+        />
+      );
+    if (showProfile)
+      return (
+        <Profile
+          setShowProfile={setShowProfile}
+          setShowOrders={setShowOrders}
+          setShowAdmin={setShowAdmin}
+        />
+      );
     if (showOrders) return <Orders setShowOrders={setShowOrders} />;
-    if (selectedProduct) return <ProductDetails product={selectedProduct} setSelectedProduct={setSelectedProduct} />;
-    if (showCart) return <Cart setShowCart={setShowCart} setShowCheckout={setShowCheckout} />;
+    if (selectedProduct)
+      return (
+        <ProductDetails
+          product={selectedProduct}
+          setSelectedProduct={setSelectedProduct}
+        />
+      );
+    if (showCart)
+      return (
+        <Cart
+          setShowCart={setShowCart}
+          setShowCheckout={setShowCheckout}
+        />
+      );
+
     return (
       <Home
         setShowCart={setShowCart}
@@ -47,9 +104,9 @@ export default function App() {
   };
 
   return (
-    <>
-      {/* ✅ Navbar always visible on every page */}
+    <div className="min-h-screen bg-gray-50">
       <Navbar
+        goHome={goHome}
         setShowLogin={setShowLogin}
         setShowSignup={setShowSignup}
         setShowCart={setShowCart}
@@ -58,7 +115,8 @@ export default function App() {
         setShowAdmin={setShowAdmin}
         setShowOrders={setShowOrders}
       />
-      {renderPage()}
-    </>
+
+      <main>{renderPage()}</main>
+    </div>
   );
 }

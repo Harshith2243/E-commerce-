@@ -1,211 +1,113 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
+import { useCart } from "../context/CartContext";
 import API from "../services/api";
- 
+import toast from "react-hot-toast";
 
-const statusColors = {
-  Pending:    "bg-yellow-100 text-yellow-700",
-  Processing: "bg-blue-100 text-blue-700",
-  Shipped:    "bg-indigo-100 text-indigo-700",
-  Delivered:  "bg-green-100 text-green-700",
-  Cancelled:  "bg-red-100 text-red-700",
-};
+export default function Checkout({ setShowCheckout, setShowOrders }) {
+  const { cart, clearCart } = useCart();
+  const [address, setAddress] = useState("");
 
-export default function Profile({
-  setShowProfile,
-  setShowCart,
-  setShowWishlist,
-  setShowAdmin,
-  setShowOrders,
-}) {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user") || "null"));
+  const totalPrice = cart.reduce(
+    (acc, item) => acc + item.price * item.qty,
+    0
+  );
 
-  const [tab, setTab] = useState("profile");
-
-  // Edit profile state
-  const [editForm, setEditForm] = useState({ name: user?.name || "" });
-  const [editLoading, setEditLoading] = useState(false);
-
-  // Change password state
-  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  const [pwLoading, setPwLoading] = useState(false);
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-500">Please login to view your profile</p>
-      </div>
-    );
-  }
-
-  const handleEditProfile = async (e) => {
-    e.preventDefault();
-    if (!editForm.name.trim()) {
-      toast.error("Name cannot be empty");
+  const placeOrderHandler = async () => {
+    if (!address.trim()) {
+      toast.error("Please enter your address");
       return;
     }
-    setEditLoading(true);
+
+    if (cart.length === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
     try {
-      const { data } = await API.put(`/users/${user._id}`, { name: editForm.name });
-      const updatedUser = { ...user, name: data.user.name };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      toast.success("Profile updated!");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Update failed");
-    } finally {
-      setEditLoading(false);
-    }
-  };
+      const user = JSON.parse(localStorage.getItem("user"));
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    if (!pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword) {
-      toast.error("All fields are required");
-      return;
-    }
-    if (pwForm.newPassword !== pwForm.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    if (pwForm.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
-    setPwLoading(true);
-    try {
-      await API.put(`/users/${user._id}/change-password`, {
-        currentPassword: pwForm.currentPassword,
-        newPassword: pwForm.newPassword,
+      await API.post("/orders", {
+        user: user.email,
+        products: cart,
+        totalPrice,
+        address,
       });
-      toast.success("Password changed successfully!");
-      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+      toast.success("Order Placed Successfully");
+      clearCart();
+      setShowCheckout(false);
+      setShowOrders(true);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to change password");
-    } finally {
-      setPwLoading(false);
+      toast.error("Order Failed");
     }
   };
-
-  const tabs = [
-    { id: "profile", label: "Profile" },
-    { id: "password", label: "Password" },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-100">
-      
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <button
+          onClick={() => setShowCheckout(false)}
+          className="bg-black text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl mb-5 sm:mb-6 hover:bg-gray-800 transition text-sm sm:text-base"
+        >
+          ← Back
+        </button>
 
-      <div className="max-w-3xl mx-auto px-4 py-10">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-10">
+          Checkout
+        </h1>
 
-        {/* Profile header card */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 flex items-center gap-4">
-          <div className="h-16 w-16 bg-black rounded-full flex items-center justify-center text-yellow-400 text-2xl font-bold flex-shrink-0">
-            {user.name?.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">{user.name}</h1>
-            <p className="text-gray-500 text-sm">{user.email}</p>
-            {user.email === "aripelliharshith123@gmail.com" && (
-              <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full font-bold mt-1 inline-block">
-                ⚡ Admin
-              </span>
-            )}
-          </div>
-        </div>
+        <div className="bg-white p-5 sm:p-8 rounded-3xl shadow-xl">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Delivery Address
+          </label>
 
-        {/* Tabs */}
-        <div className="flex gap-1 bg-white rounded-xl p-1 mb-6 shadow">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
-                tab === t.id
-                  ? "bg-black text-yellow-400"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+          <textarea
+            rows={4}
+            placeholder="Enter your full address..."
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full border border-gray-300 p-4 rounded-xl mb-5 text-sm sm:text-base outline-none focus:ring-2 focus:ring-yellow-400 resize-none"
+          />
 
-        {/* PROFILE TAB */}
-        {tab === "profile" && (
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-lg font-bold mb-4">Edit Profile</h2>
-            <form onSubmit={handleEditProfile} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-yellow-400 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={user.email}
-                  disabled
-                  className="w-full border rounded-xl px-4 py-3 text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
-              </div>
-              <button
-                type="submit"
-                disabled={editLoading}
-                className="bg-black hover:bg-gray-800 disabled:opacity-50 text-yellow-400 px-6 py-3 rounded-xl font-bold transition-colors"
-              >
-                {editLoading ? "Saving..." : "Save Changes"}
-              </button>
-            </form>
-          </div>
-        )}
+          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 mb-4">
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
+              Order Summary
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
+              {cart.length} item{cart.length !== 1 ? "s" : ""} in cart
+            </p>
 
-        {/* PASSWORD TAB */}
-        {tab === "password" && (
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-lg font-bold mb-4">Change Password</h2>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              {[
-                { label: "Current Password", key: "currentPassword" },
-                { label: "New Password", key: "newPassword" },
-                { label: "Confirm New Password", key: "confirmPassword" },
-              ].map(({ label, key }) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {label}
-                  </label>
-                  <input
-                    type="password"
-                    value={pwForm[key]}
-                    onChange={(e) => setPwForm({ ...pwForm, [key]: e.target.value })}
-                    className="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-yellow-400 outline-none"
-                    placeholder="••••••••"
-                  />
+            <div className="mt-4 space-y-2">
+              {cart.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between gap-4 text-sm sm:text-base"
+                >
+                  <span className="text-gray-700">
+                    {item.name} × {item.qty}
+                  </span>
+                  <span className="font-medium text-gray-900 whitespace-nowrap">
+                    ₹{(item.price * item.qty).toLocaleString()}
+                  </span>
                 </div>
               ))}
-              {pwForm.newPassword && pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
-                <p className="text-sm text-red-500">Passwords do not match</p>
-              )}
-              <button
-                type="submit"
-                disabled={pwLoading}
-                className="bg-black hover:bg-gray-800 disabled:opacity-50 text-yellow-400 px-6 py-3 rounded-xl font-bold transition-colors"
-              >
-                {pwLoading ? "Changing..." : "Change Password"}
-              </button>
-            </form>
+            </div>
+
+            <div className="border-t mt-4 pt-4 flex items-center justify-between">
+              <span className="text-lg sm:text-2xl font-bold">Total</span>
+              <span className="text-xl sm:text-3xl font-bold text-yellow-500">
+                ₹{totalPrice.toLocaleString()}
+              </span>
+            </div>
           </div>
-        )}
+
+          <button
+            onClick={placeOrderHandler}
+            className="bg-black text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl mt-2 w-full sm:w-auto text-sm sm:text-base font-bold hover:bg-yellow-400 hover:text-black transition"
+          >
+            Place Order
+          </button>
+        </div>
       </div>
     </div>
   );
